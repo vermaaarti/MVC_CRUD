@@ -1,0 +1,39 @@
+﻿
+@{
+    ViewData["Title"] = "Employee Details";
+}
+@model EmployeeList
+
+
+
+@using (Html.BeginForm("AddToTable", "Employee", FormMethod.Post))
+{
+    @Html.LabelFor(Model => Model.EmployeeName)
+    @Html.TextBoxFor(Model => Model.EmployeeName, new { @class = "form-control", @id = "employeeName"})
+
+
+
+    @Html.LabelFor(Model => Model.EmployeeId)
+    @Html.TextBoxFor(Model => Model.EmployeeId, new { @class = "form-control d-none" ,  @id = "employeeId"})
+    
+    @Html.TextBoxFor(Model => Model.DepartmentId, new { @class = "form-control d-none" ,  @id = "employeeId"})
+
+
+
+    @Html.TextBoxFor(Model => Model.SalaryInformatonId, new { @class = "form-control d-none" ,  @id = "employeeId"})
+
+    @Html.LabelFor(Model => Model.AmountPerYear)
+    @Html.TextBoxFor(Model => Model.AmountPerYear, new { @class = "form-control",  @id = "amountPerYear" })
+
+
+
+    @Html.LabelFor(Model => Model.DepartmentName)
+    @Html.DropDownListFor(Model => Model.DepartmentName,
+        new SelectList(Enum.GetValues(typeof(Dept))), "Select Department", new { @class = "form-control" })
+
+
+
+
+
+    <button type="submit" class="btn btn-primary">SAVE</button>
+}

@@ -1,0 +1,48 @@
+﻿@model EmployeeList
+@{
+    ViewData["Title"] = "Employee_List_Page";
+}
+
+
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<!--Data Table-->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="~/js/employeelist.js"></script>
+
+<div>
+    <h3>Employee's Data</h3>
+ 
+            <button type="button" onclick="SaveEmployee(event)" class="btn btn-info m-2">Save</button>
+    <button type="button" onclick="DeleteEmployee(event)" class="btn btn-info m-2">Delete</button>
+    <button type="button" onclick="AddNewEmployee(event)" class="btn btn-info m-2">Add Employee</button>
+       
+
+    <table id="dataTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th></th>
+                <th>employeeName</th>
+                <th>EmployeeDepartment</th>
+               <th id="amountField">AmountPerYear</th>
+               
+
+          
+
+
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data rows will be dynamically added by DataTables -->
+        </tbody>
+
+    </table>
+</div>
+
+
+
+
+
+
+

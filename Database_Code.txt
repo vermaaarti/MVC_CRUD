@@ -1,0 +1,332 @@
+/*CREATE TABLE DepartmentMaster_aarti(
+DepartmentMasterId  INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+DepartmentName  NVARCHAR(20) CHECK (DepartmentName IN ('IT', 'Finance', 'HR')),
+);*/
+
+ 
+ --select * from DepartmentMaster_aarti;
+
+
+/*CREATE TABLE EmployeeMaster_aarti(
+EmployeeId INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+EmployeeName NVARCHAR(500),
+DepartmentId INT,
+FOREIGN KEY (DepartmentId) REFERENCES DepartmentMaster_aarti(DepartmentMasterId)
+);*/
+
+ --select * from EmployeeMaster_aarti
+
+
+/*CREATE TABLE SalaryInformation_aarti(
+SalaryInformatonId  INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+EmployeeId INT,
+AmountPerYear DECIMAL(10,2),
+FOREIGN KEY (EmployeeId) REFERENCES EmployeeMaster_aarti(EmployeeId)
+);
+*/
+
+--select * from SalaryInformation_aarti
+ 
+
+/*INSERT INTO SalaryInformation_aarti(EmployeeId, AmountPerYear)
+VALUES 
+(1, 30000),
+(2, 40000),
+(3, 50000)*/
+
+ 
+
+/*INSERT INTO EmployeeMaster_aarti(EmployeeName,DepartmentId)
+VALUES
+('John',1),
+('Sue',2),
+('Mosh',3)*/
+
+ 
+
+
+
+
+-- creating stored procedure
+
+/*CREATE PROCEDURE DepartmentEmployeeSalaryDetail
+  AS
+  BEGIN
+ SELECT EmployeeMaster_aarti.EmployeeId, EmployeeMaster_aarti.DepartmentId, SalaryInformation_aarti.SalaryInformatonId,
+   EmployeeMaster_aarti.EmployeeName, DepartmentMaster_aarti.DepartmentName,SalaryInformation_aarti.AmountPerYear
+  FROM DepartmentMaster_aarti
+  INNER JOIN EmployeeMaster_aarti
+  ON DepartmentMaster_aarti.DepartmentMasterId = EmployeeMaster_aarti.DepartmentId
+  INNER JOIN SalaryInformation_aarti
+  ON EmployeeMaster_aarti.EmployeeId = SalaryInformation_aarti.EmployeeId;
+ 
+  END;*/
+  
+
+ --EXEC DepartmentEmployeeSalaryDetail
+
+ 
+
+ 
+ 
+
+ 
+
+ /*------------------------------------------------------------------------------------------------------
+---Procedure to save Employee after changing amount----------------------------------------------------------------------*/
+
+
+/*ALTER  PROCEDURE [dbo].[SaveEmployeeAarti]
+
+@JsonEmployee  NVARCHAR(MAX) 
+
+AS
+BEGIN
+
+ CREATE TABLE #TempTable (
+    SalaryInformatonId INT PRIMARY KEY,
+	IsModified INT,
+	AmountPerYear  decimal(10,2) 
+);
+
+
+INSERT INTO #TempTable (SalaryInformatonId,IsModified,AmountPerYear)
+
+SELECT 
+		
+		SalaryInformatonId, IsModified,AmountPerYear
+
+	FROM OPENJSON ( @JsonEmployee )  
+	WITH (   
+  SalaryInformatonId  int '$.SalaryInformatonId',
+IsModified int '$.IsModified',
+  AmountPerYear decimal(10,2)  '$.AmountPerYear'
+	
+	 )
+
+ 
+
+ UPDATE SalaryInformation_aarti
+SET 
+       SalaryInformation_aarti.AmountPerYear = #TempTable.AmountPerYear
+FROM SalaryInformation_aarti
+JOIN #TempTable ON SalaryInformation_aarti.SalaryInformatonId = #TempTable.SalaryInformatonId WHERE #TempTable.IsModified=1;
+
+
+END;*/
+
+
+
+
+
+
+/*------------------------------------------------------------------------------------------------------
+---Procedure to update Employee information on Edit Employee Info--------------------------------------------*/
+
+
+/*CREATE PROCEDURE EditEmployeeData
+@JsonEmp  NVARCHAR(MAX) 
+AS
+BEGIN
+DECLARE @SqlStatement VARCHAR(MAX);
+DECLARE @EmployeeId INT ;
+DECLARE @DepartmentId  INT ;
+DECLARE @SalaryInformatonId INT ;
+DECLARE @EmployeeName NVARCHAR(MAX) ;
+DECLARE @DepartmentName NVARCHAR(MAX) ;
+DECLARE @IsDeleted INT;
+DECLARE @AmountPerYear DECIMAL(10,2);
+DECLARE @ID INT;
+
+ 
+
+SELECT 
+		@EmployeeId=EmployeeId,
+		@DepartmentId = DepartmentId,
+		@SalaryInformatonId = SalaryInformatonId,
+		@EmployeeName=EmployeeName,
+		@DepartmentName=DepartmentName,
+		@IsDeleted=IsDeleted,
+		@AmountPerYear=AmountPerYear
+
+ 
+
+	FROM OPENJSON ( @JsonEmp )  
+	WITH (   
+	  EmployeeId INT '$.EmployeeId',
+  DepartmentId  INT '$.DepartmentId',
+  SalaryInformatonId  INT '$.SalaryInformatonId',
+  EmployeeName NVARCHAR(MAX) '$.EmployeeName',
+  DepartmentName NVARCHAR(MAX) '$.DepartmentName',
+  IsDeleted INT '$.IsDeleted' ,
+  AmountPerYear DECIMAL(10,2)  '$.AmountPerYear'
+	)
+
+ 
+
+INSERT INTO DepartmentMaster_aarti(DepartmentName)
+VALUES (@DepartmentName)
+
+ 
+
+Select @ID=MAX(DepartmentMasterId) from DepartmentMaster_aarti;
+INSERT INTO EmployeeMaster_aarti(EmployeeName, DepartmentId)
+VALUES (@EmployeeName , @ID );
+
+ 
+
+INSERT INTO SalaryInformaton_aarti(EmployeeId, AmountPerYear)
+VALUES (@ID, @AmountPerYear);
+END;
+	*/
+
+ 
+
+ /*------------------------------------------------------------------------------------------------------
+---Procedure to delete Employee----------------------------------------------------------------------*/
+
+
+/*CREATE PROCEDURE DeleteEmployeeData
+@EmployeeArray  NVARCHAR(MAX) 
+AS
+BEGIN
+
+CREATE TABLE #TemporaryTableDel_aarti (
+    EmployeeId INT PRIMARY KEY,
+	DepartmentId INT,
+    SalaryInformatonId INT ,
+	IsDeleted INT
+);
+
+INSERT INTO #TemporaryTableDel_aarti(EmployeeId,SalaryInformatonId,DepartmentId,IsDeleted)
+SELECT 
+EmployeeId,SalaryInformatonId,DepartmentId,IsDeleted
+
+ 
+
+FROM OPENJSON ( @EmployeeArray )  
+WITH (   
+EmployeeId  INT '$.EmployeeId',
+DepartmentId INT'$.DepartmentId',
+SalaryInformatonId  INT '$.SalaryInformatonId',
+IsDeleted INT'$.IsDeleted'
+  );
+
+ 
+
+DELETE FROM SalaryInformation_aarti WHERE SalaryInformatonId IN ( SELECT SalaryInformatonId FROM #TemporaryTableDel_aarti where IsDeleted=1);
+DELETE FROM EmployeeMaster_aarti WHERE EmployeeId IN ( SELECT EmployeeId FROM #TemporaryTableDel_aarti where IsDeleted=1 );
+DELETE FROM DepartmentMaster_aarti WHERE DepartmentMasterId IN ( SELECT DepartmentId FROM #TemporaryTableDel_aarti where IsDeleted=1);
+
+ 
+
+END;*/
+
+
+
+
+
+
+/*------------------------------------------------------------------------------------------------------
+---Procedure to add new Employee -------------------------------------------------------------------------*/
+
+/*CREATE PROCEDURE InsertNewEmployees
+@EmpJson  NVARCHAR(MAX) 
+AS
+BEGIN
+DECLARE @EmployeeName NVARCHAR(MAX) ;
+DECLARE @DepartmentName NVARCHAR(MAX) ;
+DECLARE @AmountPerYear DECIMAL(10,2);
+DECLARE @ID INT;
+
+ 
+
+SELECT 
+
+		@EmployeeName=EmployeeName,
+		@DepartmentName=DepartmentName,
+		@AmountPerYear=AmountPerYear
+
+ 
+
+	FROM OPENJSON ( @EmpJson )  
+	WITH (   
+  EmployeeName NVARCHAR(MAX) '$.EmployeeName',
+  DepartmentName NVARCHAR(MAX) '$.DepartmentName',
+  AmountPerYear DECIMAL(10,2)  '$.AmountPerYear'
+)
+
+ 
+
+INSERT INTO DepartmentMaster_aarti(DepartmentName)
+VALUES (@DepartmentName)
+
+ 
+
+Select @ID=MAX(DepartmentMasterId) from DepartmentMaster_aarti;
+
+ 
+
+INSERT INTO EmployeeMaster_aarti(EmployeeName, DepartmentId)
+VALUES (@EmployeeName , @ID );
+
+ 
+
+INSERT INTO SalaryInformation_aarti(EmployeeId, AmountPerYear)
+VALUES (@ID, @AmountPerYear);
+END;  */
+
+
+----------------------------------------------------------------------------------------------------------------------
+-----Procedure for adding data  into the datatable of single employee into the table after being edited(on clicking on name(hyperlink) )----------------------------------------------------------------------
+
+/*CREATE PROCEDURE EmployeeUpdatedData
+@EmployeeJson  NVARCHAR(MAX) 
+AS
+BEGIN
+DECLARE @EmployeeId INT;
+DECLARE @DepartmentId INT;
+DECLARE @SalaryInformatonId INT;
+DECLARE @EmployeeName NVARCHAR(MAX) ;
+DECLARE @DepartmentName NVARCHAR(MAX) ;
+DECLARE @AmountPerYear DECIMAL(10,2);
+DECLARE @ID INT;
+SELECT 
+		@EmployeeId=EmployeeId,
+		@DepartmentId=DepartmentMasterId,
+		@SalaryInformatonId=SalaryInformatonId,
+		@EmployeeName=EmployeeName,
+		@DepartmentName=DepartmentName,
+		@AmountPerYear=AmountPerYear
+	FROM OPENJSON ( @EmployeeJson )  
+	WITH ( 
+  EmployeeId INT '$.EmployeeId', 
+  DepartmentMasterId INT '$.DepartmentMasterId', 
+  SalaryInformatonId INT '$.SalaryInformatonId', 
+  EmployeeName NVARCHAR(MAX) '$.EmployeeName',
+  DepartmentName NVARCHAR(MAX) '$.DepartmentName',
+  AmountPerYear DECIMAL(10,2)  '$.AmountPerYear'
+	)
+
+ 
+
+UPDATE DepartmentMaster_aarti
+SET DepartmentName = @DepartmentName
+WHERE DepartmentMasterId = @DepartmentId;
+
+ 
+
+UPDATE EmployeeMaster_aarti
+SET EmployeeName = @EmployeeName
+WHERE EmployeeId = @EmployeeId;
+
+ 
+
+UPDATE SalaryInformation_aarti
+SET AmountPerYear = @AmountPerYear
+WHERE SalaryInformatonId = @SalaryInformatonId;
+END;*/
+
+--select * from SalaryInformation_aarti
+
+--delete from SalaryInformation_aarti where EmployeeId=8
